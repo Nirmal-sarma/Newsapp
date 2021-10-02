@@ -5,6 +5,7 @@ import React, { Component } from 'react'
 import NewsItem from './NewsItem'
 import Spinner from './Spinner';
 import PropTypes from 'prop-types'
+import InfiniteScroll from "react-infinite-scroll-component";
 
 
 export default class news extends Component 
@@ -276,33 +277,46 @@ export default class news extends Component
  static defaultProptype={
      country: 'in',
      pageSize:5,
-
+     totalResults:0
  }
 
  static Proptype={
     country: PropTypes.string,
-    pagrSize: PropTypes.number,
+    pageSize: PropTypes.number,
     category: PropTypes.string
  
  }
-     
+  
+  capitaliseWord=(string)=>{
+return string.charAt(0).toUpperCase() + string.slice(1);
+ }
     
-constructor(){
+constructor(props){
         
-        super();
+        super(props);
         this.state={
           articles:this.articles,
-          loading: false,
+          loading: true,
           page:1
-          
     }
+document.title = `${this.capitaliseWord(this.props.category)} -NEWS`;
 }
+
+
 async updateNews(){
-    const url=`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apikey=a65d7b7772c84fceb65e82f21b925394&page=${this.state.page}&pageSize=${this.props.pageSize}`;
+    this.props.setProgress(0);
+//     const url=`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}
+//     &apikey=694edd537efd4fcaa402bf9b0e41d81b
+//    &page=${this.state.page}&pageSize=${this.props.pageSize}`;
+   this.props.setProgress(0);
+   const url=`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=a65d7b7772c84fceb65e82f21b925394&page=${this.state.page}&pageSize=${this.props.pageSize}`
+    let data=await fetch(url);
+    this.props.setProgress(10);
    this.setState({loading:true});
-   let data= await fetch(url);
    let parseData= await data.json();
+   this.props.setProgress(30);
    this.setState({articles:parseData.articles,totalResults:parseData.totalResults,loading:false});
+   this.props.setProgress(100);
 }
 
 
@@ -311,40 +325,37 @@ async componentDidMount(){
 this.updateNews();
 }
 
-handleNextclick = async()=>{
-//      if(!(this.state.page+1 > Math.ceil(this.state.totalResults/this.pageSize))){
+fetchMoreData = async()=>{
 
-//     let url=`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apikey=a65d7b7772c84fceb65e82f21b925394&page=${this.state.page+1}&pageSize=${this.props.pageSize}`;
-//         this.setState({loading:true});
-//         let data= await fetch(url);
-//         let parseData= await data.json();
-//         this.setState({articles:parseData.articles});
-       
-//     this.setState({
-//         page:this.state.page+1,
-//         loading:false
-//     })
-//   }
+this.setState({page:this.state.page+1})
+
+const url=`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=
+${this.props.category}&apikey=a65d7b7772c84fceb65e82f21b925394&page=${this.state.page}&pageSize=
+${this.props.pageSize}`;
+
+let data= await fetch(url);
+
+let parseData= await data.json();
+
+this.setState({articles:this.state.articles.concat(parseData.articles),
+    totalResults:parseData.totalResults
+    });
+  
+}
+
+handleNextclick = async(props)=>{
+
 
 this.setState({page: this.state.page+1})
 this.updateNews();
+
 }
 
 handlePrevclick= async()=>
 {
-//     let url=`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apikey=a65d7b7772c84fceb65e82f21b925394&page=${this.state.page-1}&pageSize=${this.props.pageSize}`;
-//     this.setState({loading:true});
-//     let data= await fetch(url);
-//     let parseData= await data.json();
-//     this.setState({articles:parseData.articles});
-// this.setState({
-//     page:this.state.page-1,
-//     articles:parseData.articles,
-//     loading:false
-// })
+
 this.setState({page: this.state.page-1})
 this.updateNews();
-
 }
 
     render() 
@@ -352,27 +363,39 @@ this.updateNews();
         
         return (
             <div container="container mx-2">
-            <h2 className="text-cente                     r">NewsApp-Top Headlines</h2>
+            <h2 className="text-center">NewsApp-Top {!this.props.category === 'general'?"":this.capitaliseWord(this.props.category)} Headlines  </h2>
             {this.state.loading && <Spinner/>}
-                <div className="row text-center">
-                
-                {!this.state.loading && this.state.articles.map((element)=>{
+            <InfiniteScroll
+           
+               
+          dataLength={this.state.articles.length}
+          next={this.fetchMoreData}
+          hasMore={this.state.articles.length !== this.state.totalResults}
+          loader={<Spinner/>}
+        > 
+        <div className="container">
+
+        
+        <div className="row text-center">
+                {this.state.articles.map((element)=>{
                     return  <div className="col-md-4 col-sm-4" key={element.url}>
                         <NewsItem title={element.title?element.title.slice(0,45):""} description={element.description ?element.description.slice(0,88):""} imageUrl={element.urlToImage}
                          newsUrl={element.url} date={element.publishedAt} author={element.author} sources={element.source.name}/>
                     </div>
                 })}
-                
-                <div className="container d-flex justify-content-between text-center">
+                </div>
+                 </div>
+            </InfiniteScroll>    
+                {/* <div className="container d-flex justify-content-between text-center">
                {!this.state.loading && <button disabled={this.state.page <=1} type="button" className="btn btn-dark mx-2" onClick={this.handlePrevclick}>&larr; prev</button>}
 
                  
                   {!this.state.loading && <button disabled={this.state.page+1 > Math.ceil(this.state.totalResults/this.props.pageSize)} type="button" className="btn btn-dark mx-2" onClick={this.handleNextclick}>next &rarr;</button>}
                    
-                  </div> 
+                </div>  */}
 
           
-                </div>
+               
             </div>
         )
     }
