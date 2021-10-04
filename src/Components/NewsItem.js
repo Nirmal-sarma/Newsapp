@@ -1,19 +1,18 @@
-import React, { Component } from 'react'
+import React from 'react'
 
-export default class NewsItem extends Component {
+const NewsItem =(props)=>{
 
-  render() {
-    let { title, description, imageUrl, newsUrl, author, date, sources } = this.props;
+  
+    let { title, description, imageUrl, newsUrl, author, date, sources } =props;
     return (
       <div>
-        <div className="card text-center" style={{ width: "23rem", margin: "0px 0px 0px 20px" }}>
+        <div className="card text-center" style={{ width: "23rem", margin: "0px 10px 0px 20px" }}>
           <div style={{
             display: 'flex',
             justifyContent: 'flex-end',
             position: 'absolute',
             right: '0'
-
-          }}>
+            }}>
 
             <span class="badge rounded-pill bg-success" >
               {sources}
@@ -31,5 +30,7 @@ export default class NewsItem extends Component {
 
       </div>
     )
-  }
+  
 }
+
+export default NewsItem
