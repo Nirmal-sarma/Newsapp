@@ -15,7 +15,7 @@ const NewsItem =(props)=>{
             }}>
 
             <span class="badge rounded-pill bg-success" >
-              {sources}
+            {sources}
             </span>
           </div>
 
